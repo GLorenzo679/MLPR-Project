@@ -56,7 +56,11 @@
 \maketitle
 
 \begin{abstract}
-    This report is the result of the project for the course of Machine Learning and Pattern Recognition. The project is about fingerprint spoofing detection. The dataset consists of labeled samples corresponding to the genuine (True, label 1) class and the fake (False, label 0) class. We will analyze the features of the dataset, perform dimensionality reduction, train and validate the classifiers on the training dataset, and finally test the classifiers on the testing dataset. We will use different classifiers: Gaussian Classifiers, Logistic Regression, Support Vector Machine, and Gaussian Mixture Model. We will evaluate the classifiers based on the error rate and the Detection Cost Function (DCF).
+    In this report, we present the project about fingerprint spoofing detection that we realized for the course of Machine Learning and Pattern Recognition.
+    \nl
+    The dataset consists of labeled samples corresponding to the genuine (True, label 1) class and the fake (False, label 0) class. We will analyze the features of the dataset, perform dimensionality reduction, train and validate the classifiers on the training dataset, and finally test the classifiers on the testing dataset.
+    \nl
+    We will use different classifiers: Gaussian Classifiers, Logistic Regression, Support Vector Machine, and Gaussian Mixture Model. We will evaluate them based on the error rate and the Detection Cost Function (DCF).
 \end{abstract}
 
 \tableofcontents
@@ -111,7 +115,7 @@ We observe that also features 3 and 4 are gaussian distributed and posses a simi
 Feature 5 and 6 are more complex. We observe three modes and the two features are not gaussian distributed. For both features class 1 can be modeled by two distinct gaussians, while class 0 can be modeled by a three gaussians (we can hence see two clusters for class 1 and three clusters for class 0). The two distributions overlap in the intervals corresponding to the two modes of class 1.
 We expect gaussian mixture models to perform better than simple gaussian models for these features.
 \nnl
-We can also plot the pairwise plot of the features for the genuine and fake classes.
+We can also observe the pairwise plot of the features for the genuine and fake classes.
 
 \begin{figure}[H]
     \centering
@@ -132,7 +136,7 @@ We can also plot the pairwise plot of the features for the genuine and fake clas
 \noindent
 The analysis previous analysis is confirmed by the pairwise plot of the features. We can see a string overlap for both classes in features 1 and 2, while we can see a separation in features 3 and 4. Features 5 and 6 show a more complex structure with more clusters for each class.
 \nnl
-Finally we can plot a pairwise plot of every feature with every other feature.
+Finally we can see the pairwise plot of every feature with every other feature.
 \begin{figure}[H]
     \centering
     \begin{subfigure}[t]{1\textwidth}
@@ -190,7 +194,7 @@ After applying LDA the classes overlap only on a partial portion of the distribu
 \nl
 Compared to \autoref{fig:histograms} we can see that the LDA projection is able to separate the two classes better than the original features.
 \nnl
-In the following part, we will attempt out first classification, using LDA as a classifier.
+In the following part, we will attempt our first classification, using LDA as a classifier.
 \nl
 We first divide our training dataset in a training and validation part. From now on, if not stated otherwise, we will always do a single split with a training/validation ratio of 2:1.
 \nnl
@@ -789,14 +793,12 @@ In the following we present the results of the GMM classifier in terms of DCF an
 \noindent
 The GMM classifier is in general able to achieve good results. We could have expected this since GMM is a more complex model than the other models we have used, and as we said before is a good candidate to model some of the features of our dataset.
 \nnl
-The best results are obtained with the diagonal covariance matrix GMM with 8 components for class 0 and 32 components for class 1. The minDCF is around 0.130, which is the best result obtained until this moment.
+The best results are obtained with the diagonal covariance matrix GMM with 8 components for class 0 and 32 components for class 1. The minDCF is around \textbf{0.130}, which is the best result obtained until this moment.
 \nl
 These results are in line with the analysis we have done. In particular we have seen that the data is not linearly separable, and that the features are not correlated (even tough in the diagonal covariance matrix case we are doing a different assumption wrt to the Naive assumption).
 
 \section{Model Comparison}
-We can now compare the models in terms of minDCF, to see which one is the best model for our dataset.
-\nnl
-In this section we will take the best candidates for each model and compare them in terms of minDCF.
+We can now compare the models in terms of minDCF, to see which one is the best model for our dataset (if we selected the optimal threshold).
 \nl
 The three best models that we will consider are:
 \begin{itemize}
@@ -844,24 +846,13 @@ As we have seen in the previous sections, the models we have used are not well c
 \nl
 This is due to the fact that until now we have used as threshold the theoretical threshold ($-{log}\frac{\pi}{1-\pi}$) that is not always optimal. That's why we see huge differences in the DCF and minDCF values, especially for our target application.
 \nnl
-In this section we will try to calibrate the models using the Prior Weighted Logistic Regression as a calibration model. We will use a 5-fold cross validation to calibrate the models.
+In this section we will try to calibrate the models using the Prior Weighted Logistic Regression as a calibration model.
+\nl
+To train the calibration we will use a 5-fold cross validation, using the previously computed scores as inputs. This will allow us to see which hyper parameter (training prior) is the best.
 \subsubsection*{Quadratic Logistic Regression}
 We will start by calibrating the Quadratic Logistic Regression classifier.
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[t]{0.6\textwidth}
-        \includegraphics[width=\textwidth]{./plot/calibration/QLR.png}
-    \end{subfigure}
-    \caption{Calibration of the Quadratic Logistic Regression classifier (training prior = 0.1).}
-    \label{fig:calibration_QLR}
-\end{figure}
-\noindent
-As we can see in this figure the calibration is able to drastically improve the performances of the model over the whole range of priors.
-\nl
-In the figure we have reported the calibration for a training prior of 0.1, but we have also tried different training priors and the results were similar.
 \nnl
-In the following table we instead report the minDCF, DCF, and calDCF for different training priors, considering our target application (effective prior = 0.1).
+In the following table we report the minDCF, DCF, and calDCF for different training priors, considering our target application (effective prior = 0.1).
 \begin{table}[H]
     \centering
     \begin{tabular}{|c|c|c|c|}
@@ -893,17 +884,19 @@ In the following table we instead report the minDCF, DCF, and calDCF for differe
 \end{table}
 \noindent
 We obtain the best results for training priors of 0.7, with a calDCF of 0.248.
-\subsubsection*{SVM with RBF Kernel}
+\nnl
+In the following figure we have plotted the Bayes error plot for the Quadratic Logistic Regression classifier after the calibration step, with the calibration model trained with a prior of 0.7.
 \begin{figure}[H]
     \centering
     \begin{subfigure}[t]{0.6\textwidth}
-        \includegraphics[width=\textwidth]{./plot/calibration/RBF_SVM.png}
+        \includegraphics[width=\textwidth]{./plot/calibration/QLR.png}
     \end{subfigure}
-    \caption{Calibration of the SVM with RBF kernel classifier (training prior = 0.1).}
-    \label{fig:calibration_SVM}
+    \caption{Calibration of the Quadratic Logistic Regression classifier (training prior = 0.7).}
+    \label{fig:calibration_QLR}
 \end{figure}
 \noindent
-Following the same approach as before, we have plotted the bayes error plot for the SVM with RBF kernel. We can see that the calibration is able to improve the performances of the model, especially in the extremes of the plot.
+As we can see in this figure the calibration is able to drastically improve the performances of the model over the whole range of priors.
+\subsubsection*{SVM with RBF Kernel}
 \begin{table}[H]
     \centering
     \begin{tabular}{|c|c|c|c|}
@@ -935,17 +928,18 @@ Following the same approach as before, we have plotted the bayes error plot for 
 \end{table}
 \noindent
 Here we obtain the best results for a training prior of 0.1, with a calDCF of 0.179.
-\subsubsection*{GMM}
 \begin{figure}[H]
     \centering
     \begin{subfigure}[t]{0.6\textwidth}
-        \includegraphics[width=\textwidth]{./plot/calibration/GMM.png}
+        \includegraphics[width=\textwidth]{./plot/calibration/RBF_SVM.png}
     \end{subfigure}
-    \caption{Calibration of the GMM with diagonal covariance matrix classifier (training prior = 0.1).}
-    \label{fig:calibration_GMM}
+    \caption{Calibration of the SVM with RBF kernel classifier (training prior = 0.1).}
+    \label{fig:calibration_SVM}
 \end{figure}
 \noindent
-Finally we have calibrated the GMM classifier. We can see that the original model was already well calibrated, and the calibration step didn't improve the performances of the model by much. For some priors the calibration step even worsened the performances of the model.
+Following the same approach as before, we have plotted the Bayes error plot for the SVM with RBF kernel. We can see that the calibration is able to improve the performances of the model, especially in the extremes of the plot.
+\subsubsection*{GMM}
+Finally we have calibrated the GMM classifier. The results are presented in the following table.
 \begin{table}[H]
     \centering
     \begin{tabular}{|c|c|c|c|}
@@ -977,13 +971,23 @@ Finally we have calibrated the GMM classifier. We can see that the original mode
 \end{table}
 \noindent
 Here we obtain the best results for a training prior of 0.9, with a calDCF of 0.148.
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.6\textwidth}
+        \includegraphics[width=\textwidth]{./plot/calibration/GMM.png}
+    \end{subfigure}
+    \caption{Calibration of the GMM with diagonal covariance matrix classifier (training prior = 0.9).}
+    \label{fig:calibration_GMM}
+\end{figure}
+\noindent
+We can see that the original model was already well calibrated, and the calibration step didn't improve the performances of the model by much. For some priors the calibration step even worsened the performances of the model.
 \nnl
 Even after the calibration step the GMM classifier is the best model, followed by the SVM with RBF kernel, and then the Quadratic Logistic Regression classifier.
 
 \section{Model Fusion}
 In this section we will try to fuse the models we have used in order to improve the performances of the classifiers.
 \nl
-We will use a technique called "score fusion" that is able to combine the scores of the models in order to obtain a better classification.
+We will use a technique called "score fusion" that is able to combine the scores of the models in order to obtain a different classification.
 \nnl
 Here are the results of the fused models in terms of minDCF, DCF for our target application (effective prior = 0.1).
 \begin{table}[H]
@@ -1006,9 +1010,10 @@ Here are the results of the fused models in terms of minDCF, DCF for our target 
     \label{tab:Fused_Models}
 \end{table}
 \noindent
-We can see that the best model is the one that fuses the RBF SVM and the GMM classifier, with a minDCF of 0.185. We can observe that also this fused model suffers from mis-calibration (the DCF is quite higher than the minDCF for our target application).
+We can see that the best model is the one that fuses the RBF SVM and the GMM classifier, with a minDCF of 0.185. We can observe that also this fused models suffer from mis-calibration (the DCF is quite higher than the minDCF for our target application).
 \nnl
-Again, we applied score calibration with different priors for the training of the calibration model, and presented the results in the following tables.
+Again, we applied score calibration with different priors for the training of the calibration model. In order to find the best calibration we have used a 5-fold cross validation on the validation set.
+\nl The results are presented in the following tables.
 
 \begin{table}[H]
     \centering
@@ -1130,7 +1135,7 @@ Again, we applied score calibration with different priors for the training of th
     \label{tab:QLR_RBF_SVM_GMM_Priors}
 \end{table}
 \noindent
-We can see that the best results are obtained by fusing all the models together. The best results are obtained for a training prior of 0.4, with a calDCF of 0.142.
+The best results are obtained by fusing all the models together. The best results are obtained for a training prior of 0.4, with a calDCF of 0.142.
 \nl
 Even if we have found an improvement, we have to consider that the GMM model alone is able to achieve similar results (calDCF of 0.148), and thus the fusion of the models is not strictly necessary.
 \nnl
@@ -1148,7 +1153,7 @@ We will present the results in terms of minDCF, DCF, and calDCF, and we will com
 \subsection*{Delivered System}
 We will start by presenting the results of the delivered system on the test set.
 \nl
-Here is are the minDCF and DCF values obtained using the system for our target application, as well as the bayes error plot for different priors.
+Here is are the minDCF and DCF values obtained using the system for our target application, as well as the Bayes error plot for different priors.
 
 \begin{table}[H]
     \centering
@@ -1160,7 +1165,7 @@ Here is are the minDCF and DCF values obtained using the system for our target a
         0.282           & 0.363        \\
         \hline
     \end{tabular}
-    \caption{Delivered System: minDCF and DCF for the test set (target prior = 0.1)}
+    \caption{Delivered System: minDCF and DCF for the test set (Application Prior = 0.1)}
     \label{tab:Delivered_System}
 \end{table}
 
@@ -1174,10 +1179,10 @@ Here is are the minDCF and DCF values obtained using the system for our target a
 \end{figure}
 \noindent
 We can see that the delivered system is not well calibrated, and the DCF is higher than the minDCF for our target application and for priors at the extremes of the plot.
-\nnl
-We will now present the results of the single models, as well as the fused ones, on the test set.
 
 \subsection*{Single and Fused Models}
+We will now present the results of the single models, as well as the fused ones, on the test set.
+\nl
 \begin{table}[H]
     \centering
     \begin{tabular}{|l|c|}
@@ -1215,24 +1220,34 @@ We will now present the results of the single models, as well as the fused ones,
 \noindent
 We can see that the GMM model is the best model in terms of DCF, with a value of 0.195. Our delivered system was not the best choice possible, and we could have obtained better results by using the GMM model alone.
 \nl
-After all the fusion of the models was not strictly necessary, and the GMM model was also able to achieve similar results during the training phase.
+After all, the fusion of the models was not strictly necessary, and the GMM model was also able to achieve similar results during the training phase.
 
-\subsection*{Calibration of Single Models}
-We have seen that the models are not well calibrated, and we will now try to calibrate them using the Prior Weighted Logistic Regression model.
+\subsection*{Calibration}
+We have seen that the delivered model is not well calibrated. Given this, we will now try to calibrate the models using the Prior Weighted Logistic Regression.
 \nl
-We will present the results of the calibration step for the single models. We are not going to present the results for the fused models.
+In this phase we are going to use the validation part of the original dataset to train our calibration model, using the best training prior we have found during the training phase.
+\nl
+We will present the results obtained after the calibration step for the single and the fused models.
 \begin{table}[H]
     \centering
     \begin{tabular}{|c|c|c|}
         \hline
         \rowcolor{blue!10}
-        \textbf{Model} & \textbf{minDCF} & \textbf{calDCF} \\
+        \textbf{Model} & \textbf{minDCF} & \textbf{calDCF}                  \\
         \hline
-        QLR            & 0.351           & 0.370           \\
+        QLR            & 0.351           & 0.370                            \\
         \hline
-        RBF SVM        & 0.262           & 0.288           \\
+        RBF SVM        & 0.262           & 0.288                            \\
         \hline
-        GMM            & 0.183           & 0.210           \\
+        GMM            & 0.183           & 0.210                            \\
+        \hline
+        QLR + RBF SVM  & 0.258           & 0.282                            \\
+        \hline
+        QLR + GMM      & 0.183           & 0.211                            \\
+        \hline
+        RBF SVM + GMM  & 0.181           & \textcolor{cyan}{\textbf{0.208}} \\
+        \hline
+        \makecell{QLR + RBF SVM + GMM                                       \\ (Delivered System)} & 0.181        &   \textcolor{cyan}{\textbf{0.208}}                 \\
         \hline
     \end{tabular}
     \caption{Calibration of the single models on the test set (application prior = 0.1)}
@@ -1241,7 +1256,9 @@ We will present the results of the calibration step for the single models. We ar
 \noindent
 We can see that the calibration step is able to improve the performances of the models, especially for the QLR and SVM models. As in the training phase, the GMM model is already well calibrated and the calibration step seems to worsen the performances of the model.
 \nl
-Here instead is the bayes error plot for the single models after the calibration step.
+Similarly to what we found during the training phase, the 3-fused model is the best model in terms of DCF, followed closely by the GMM.
+\nnl
+Here instead are the Bayes error plots for the models after the calibration step.
 
 \begin{figure}[H]
     \centering
@@ -1258,12 +1275,33 @@ Here instead is the bayes error plot for the single models after the calibration
     \end{subfigure}
 
     \caption{Bayes error plot for the single models after the calibration step on the test set.}
-    \label{fig:calibration_single_models}
+    \label{fig:calibration_models_single}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+        \includegraphics[width=\textwidth]{./plot/eval/eval_calib_QLR_RBF_SVM.png}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \includegraphics[width=\textwidth]{./plot/eval/eval_calib_QLR_GMM.png}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.49\textwidth}
+        \includegraphics[width=\textwidth]{./plot/eval/eval_calib_RBF_SVM_GMM.png}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \includegraphics[width=\textwidth]{./plot/eval/eval_calib_QLR_RBF_SVM_GMM.png}
+    \end{subfigure}
+
+    \caption{Bayes error plot for the fused models after the calibration step on the test set.}
+    \label{fig:calibration_models_fused}
 \end{figure}
 \noindent
-What we have said for the target application is confirmed also for other priors: calibration greatly improves the performances of the QLR and SVM models, while it worsens the performances of the GMM model.
+What we have said for the target application is confirmed also for other priors: calibration generally improves the performances of our models.
 \nnl
-After the calibration step the GMM model is still the best model in terms of DCF, with a value of 0.210. This confirms what we have seen during the training phase.
+After the calibration step the 3-fused model is the best model in terms of DCF, with a value of 0.208, followed by the GMM model with a DCF of 0.210. This confirms what we have seen during the training phase.
 
 \subsection*{Analysis of the training strategy}
 In this last section we are going to use the test set to analyze the training strategy we have used and see if it was effective in improving the performances of the models.
@@ -1311,8 +1349,8 @@ To conclude we can say that the training strategy we have used for the GMM model
 \chapter{Conclusions}
 In this project we have analyzed the performances of different models on a dataset of speech features. We have trained different models (Quadratic Logistic Regression, SVM with RBF kernel, Gaussian Mixture Model) and we have compared them in terms of DCF and minDCF.
 \nnl
-The model we decided to deliver turned out not to be the best option, and we could have obtained better results by using the GMM model alone.
+The model we decided to deliver turned out to be good and the ideas we had about the dataset were confirmed by the results we obtained.
 \nl
-For what concerns the training strategy for this model we can say that it was effective in improving the performances of the model.
+For what concerns the training strategy for the GMM model we can say that it was effective in improving the performances of the model.
 
 \end{document}
