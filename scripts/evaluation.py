@@ -287,6 +287,91 @@ def evaluation(
                 f"{PATH}/report/plot/eval/eval_calib_{model_names_short[idx]}.png"
             )
 
+    best_train_priors = [0.9, 0.3, 0.7, 0.4]
+
+    # calibration for the fusion of the 3 models
+    for mask in model_mask:
+        plt.figure(figsize=(12, 6))
+        plt.xlabel(r"$\log \left( \frac{\tilde{\pi}}{1 - \tilde{\pi}} \right)$")
+        plt.ylabel("DCF")
+        plt.xlim(-4, 4)
+        plt.ylim(0, 1.02)
+
+        masked_val_sl = [sl for sl, m in zip(val_scores_labels, mask) if m]
+        masked_sl = [sl for sl, m in zip(scores_labels, mask) if m]
+
+        masked_mn_short = [
+            mn_short for mn_short, m in zip(model_names_short, mask) if m
+        ]
+        train_priors = [best_train_priors[i] for i, m in enumerate(mask) if m]
+
+        print(f"Model names: {' + '.join(masked_mn_short)}")
+
+        val_scores = np.vstack([sl[0] for sl in masked_val_sl])
+        val_labels = masked_val_sl[0][1]
+        scores = np.vstack([sl[0] for sl in masked_sl])
+        labels = masked_sl[0][1]
+
+        # fit the calibration model on the validation set scores
+        PWL = PWLogisticRegression(
+            val_scores,
+            val_labels,
+            0,
+            train_priors[0],
+        )
+        PWL.fit()
+        # use the calibration model to calibrate the scores of the evaluation set
+        cal_scores = PWL.score(scores)
+        cal_scores -= np.log(train_priors[0] / (1 - train_priors[0]))
+
+        DCF, minDCF = compute_eval_metrics(cal_scores.ravel(), labels, APP_PRIOR)
+
+        if verbose:
+            print(
+                f"Results for application prior {APP_PRIOR} ({' + '.join(masked_mn_short)}):"
+            )
+            print(f"minDCF: {minDCF}")
+            print(f"calDCF: {DCF}\n")
+
+        uncal_DCFs = []
+        minDCFs = []
+        cal_DCFs = []
+
+        for ep in eff_priors:
+            uncal_DCF, _ = compute_eval_metrics(
+                scores.ravel(), np.hstack([labels] * len(masked_sl)), ep
+            )
+            DCF, minDCF = compute_eval_metrics(cal_scores.ravel(), labels, ep)
+
+            uncal_DCFs.append(uncal_DCF)
+            minDCFs.append(minDCF)
+            cal_DCFs.append(DCF)
+
+        plt.plot(
+            eff_prior_log_odds,
+            cal_DCFs,
+            label="calDCF",
+            color="b",
+        )
+        plt.plot(eff_prior_log_odds, minDCFs, label="minDCF", color="r", linestyle="--")
+        plt.plot(
+            eff_prior_log_odds,
+            uncal_DCFs,
+            label="DCF",
+            color="b",
+            linestyle=":",
+        )
+        plt.legend()
+        plt.grid()
+        plt.title(f"Calibration for {' + '.join(masked_mn_short)} (eval dataset)")
+
+        if plot:
+            plt.show()
+        if save:
+            plt.savefig(
+                f"{PATH}/report/plot/eval/eval_calib_{'_'.join(masked_mn_short)}.png"
+            )
+
     # Part 4: analysis of the training strategy for GMM
     for cov_type in ["full", "diag", "tied"]:
         DCfs = []
